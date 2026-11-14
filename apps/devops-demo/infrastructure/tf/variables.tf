@@ -6,7 +6,6 @@ variable "pep_defaults" {
     environment     = string
     subscription_id = string
     resource_groups = map(string)
-    agent_ip        = string
     tags            = map(string)
   })
   validation {
