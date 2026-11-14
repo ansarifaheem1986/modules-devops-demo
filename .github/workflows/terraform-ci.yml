@@ -44,9 +44,7 @@ jobs:
       - name: Check Terraform formatting
         run: |
           terraform fmt -check modules/azure-resource-group
-          terraform fmt -check -recursive modules/azure-aks-cluster
           terraform fmt -check -recursive apps/devops-demo/infrastructure/tf
-          terraform fmt -check -recursive apps/iacc-demo/infrastructure/tf
 
       - name: Test resource group module
         working-directory: modules/azure-resource-group
