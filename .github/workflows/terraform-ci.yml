@@ -1,0 +1,116 @@
+name: Terraform CI
+
+on:
+  push:
+    paths:
+      - "apps/**"
+      - "modules/**"
+      - ".github/workflows/terraform-*.yml"
+
+  pull_request:
+    paths:
+      - "apps/**"
+      - "modules/**"
+      - "tests/**"
+      - ".github/workflows/terraform-*.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.5"
+          terraform_wrapper: false
+
+      - name: Identify authenticated validation requirements
+        run: |
+          echo "::warning::Corpaudit and GNRM use private ADO modules. Full Terraform validation for these two apps runs in the authenticated Terraform deploy workflow, not in this unprivileged CI workflow."
+
+      - name: Check Terraform formatting
+        run: |
+          terraform fmt -check modules/azure-resource-group
+          terraform fmt -check -recursive modules/azure-aks-cluster
+          terraform fmt -check -recursive apps/devops-demo/infrastructure/tf
+          terraform fmt -check -recursive apps/iacc-demo/infrastructure/tf
+
+      - name: Test resource group module
+        working-directory: modules/azure-resource-group
+        run: |
+          terraform init -backend=false -input=false
+          terraform test -no-color
+
+      - name: Test devops-demo module
+        working-directory: apps/devops-demo/infrastructure/tf
+        run: |
+          terraform init -backend=false -input=false
+          terraform test -no-color
+
+      - name: Test iacc-demo module
+        working-directory: apps/iacc-demo/infrastructure/tf
+        env:
+          AZURE_AGENT_IP: 203.0.113.10
+          TF_STATE_STORAGE_ACCOUNT: validationonly
+          EDAP_ALLOW_PLACEHOLDER_SUBSCRIPTION: "true"
+        run: |
+          terraform init -backend=false -input=false
+          terraform test -no-color
+
+      - name: Test AKS module
+        working-directory: modules/azure-aks-cluster
+        run: |
+          terraform init -backend=false -input=false
+          terraform test -no-color
+
+  validate:
+    name: Validate ${{ matrix.app }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - connectados
+          - croptrack
+          - devops-demo
+          - fpa
+          - gcasf
+          - halocrm
+          - iacc-demo
+          - latame2e
+          - latamfam
+          - latamlab
+          - latamrm
+          - latamtpo
+          - tfgda
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.5"
+          terraform_wrapper: false
+
+      - name: Validate locally available app modules
+        working-directory: apps/${{ matrix.app }}/infrastructure/tf
+        run: |
+          set -euo pipefail
+          terraform init -backend=false -input=false
+          terraform validate -no-color
