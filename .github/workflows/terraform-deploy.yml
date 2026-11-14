@@ -22,8 +22,14 @@ on:
           - apply
           - destroy
 
+      plan_run_id:
+        description: Required for apply; run ID of a successful plan for this environment and commit
+        required: false
+        type: string
+
 permissions:
   contents: read
+  actions: read
 
 env:
   TF_INPUT: false
@@ -44,6 +50,7 @@ jobs:
 
     env:
       DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+      PLAN_RUN_ID: ${{ inputs.plan_run_id }}
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -104,20 +111,60 @@ jobs:
             -input=false \
             -out=tfplan
 
+      - name: Record plan metadata
+        if: inputs.action == 'plan'
+        run: |
+          jq -n \
+            --arg environment "$DEPLOY_ENVIRONMENT" \
+            --arg source_sha "$GITHUB_SHA" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            '{environment: $environment, source_sha: $source_sha, run_id: $run_id}' \
+            > plan-metadata.json
+
       - name: Upload Plan
         if: inputs.action == 'plan'
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan
-          path: apps/devops-demo/infrastructure/tf/tfplan
-          retention-days: 1
+          name: tfplan-${{ inputs.environment }}-${{ github.run_id }}
+          path: |
+            apps/devops-demo/infrastructure/tf/tfplan
+            apps/devops-demo/infrastructure/tf/plan-metadata.json
+          retention-days: 7
+
+      - name: Validate Plan Run ID
+        if: inputs.action == 'apply'
+        run: |
+          if [[ ! "$PLAN_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "For apply, provide the run ID from the successful plan run." >&2
+            exit 1
+          fi
 
       - name: Download Plan
         if: inputs.action == 'apply'
         uses: actions/download-artifact@v4
         with:
-          name: tfplan
+          name: tfplan-${{ inputs.environment }}-${{ inputs.plan_run_id }}
           path: apps/devops-demo/infrastructure/tf
+          run-id: ${{ inputs.plan_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Verify downloaded plan
+        if: inputs.action == 'apply'
+        run: |
+          set -euo pipefail
+          jq -e \
+            --arg environment "$DEPLOY_ENVIRONMENT" \
+            --arg source_sha "$GITHUB_SHA" \
+            --arg run_id "$PLAN_RUN_ID" \
+            '.environment == $environment and .source_sha == $source_sha and .run_id == $run_id' \
+            plan-metadata.json >/dev/null || {
+              echo "The downloaded plan must match this environment, commit, and plan run ID." >&2
+              exit 1
+            }
+          test -f tfplan || {
+            echo "The downloaded artifact does not contain tfplan." >&2
+            exit 1
+          }
 
       - name: Terraform Apply
         if: inputs.action == 'apply'
