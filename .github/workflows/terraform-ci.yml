@@ -84,20 +84,7 @@ jobs:
       fail-fast: false
       matrix:
         app:
-          - connectados
-          - croptrack
           - devops-demo
-          - fpa
-          - gcasf
-          - halocrm
-          - iacc-demo
-          - latame2e
-          - latamfam
-          - latamlab
-          - latamrm
-          - latamtpo
-          - tfgda
-
     steps:
       - uses: actions/checkout@v4
         with:
