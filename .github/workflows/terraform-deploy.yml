@@ -61,6 +61,23 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Show runner details and capture workflow run ID
+        id: run_details
+        env:
+          ACTIONS_RUNNER_NAME: ${{ runner.name }}
+          ACTIONS_RUNNER_OS: ${{ runner.os }}
+          ACTIONS_RUNNER_ARCH: ${{ runner.arch }}
+        run: |
+          set -euo pipefail
+          echo "run_id=$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+          {
+            echo "### GitHub Actions runner"
+            echo "- Runner: \`$ACTIONS_RUNNER_NAME\`"
+            echo "- OS / architecture: \`$ACTIONS_RUNNER_OS / $ACTIONS_RUNNER_ARCH\`"
+            echo "- Workflow run ID: \`$GITHUB_RUN_ID\`"
+            echo "- Run attempt: \`$GITHUB_RUN_ATTEMPT\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Generate Terraform variables for selected environment
         run: |
           set -euo pipefail
@@ -111,6 +128,20 @@ jobs:
             -input=false \
             -out=tfplan
 
+      - name: Show Plan Run ID for Apply
+        if: inputs.action == 'plan'
+        env:
+          PLAN_RUN_ID: ${{ steps.run_details.outputs.run_id }}
+          PLAN_ARTIFACT_NAME: tfplan-${{ inputs.environment }}-${{ steps.run_details.outputs.run_id }}
+        run: |
+          {
+            echo "### Saved Terraform plan"
+            echo "- Environment: \`$DEPLOY_ENVIRONMENT\`"
+            echo "- Plan Run ID: \`$PLAN_RUN_ID\`"
+            echo "- Artifact: \`$PLAN_ARTIFACT_NAME\`"
+            echo "- To apply this exact plan, rerun this workflow with action \`apply\`, the same environment and commit, and enter this Plan Run ID."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Record plan metadata
         if: inputs.action == 'plan'
         run: |
@@ -125,7 +156,7 @@ jobs:
         if: inputs.action == 'plan'
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-${{ inputs.environment }}-${{ github.run_id }}
+          name: tfplan-${{ inputs.environment }}-${{ steps.run_details.outputs.run_id }}
           path: |
             apps/devops-demo/infrastructure/tf/tfplan
             apps/devops-demo/infrastructure/tf/plan-metadata.json
