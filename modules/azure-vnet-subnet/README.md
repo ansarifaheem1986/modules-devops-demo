@@ -16,7 +16,10 @@ in the configuration.
 
 Creation requires one or more non-empty address prefixes. The parent resource
 group and virtual network must already exist; this module does not create or
-modify either parent resource.
+modify either parent resource. The module resolves the virtual network by name
+and resource group during planning before it reads or creates a subnet. A
+missing VNet therefore fails during planning; create or correct the VNet in the
+same resource group before applying.
 
 ## Outputs
 
