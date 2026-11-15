@@ -1,0 +1,23 @@
+{
+  "app_prefix": "project-c",
+  "service_name": "project-c",
+  "project_code": "PROJECT-C",
+  "tags": {
+    "application": "project-c"
+  },
+  "environments": {
+    "dev": {
+      "subscription_id": "REPLACE_WITH_SUBSCRIPTION_UUID",
+      "resource_groups": {
+        "default": "IACC-ProjectC-dev-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectC-dev-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,6 @@ on:
         type: choice
         options:
           - dev
-          - qa
           - stage
           - prod
 
@@ -46,7 +45,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: apps/project-b/infrastructure/tf
+        working-directory: apps/project-c/infrastructure/tf
 
     env:
       DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
@@ -57,7 +56,7 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
-      TF_STATE_KEY: project-b-${{ inputs.environment }}.tfstate
+      TF_STATE_KEY: project-c-${{ inputs.environment }}.tfstate
 
     steps:
 
@@ -91,7 +90,7 @@ jobs:
             . as $app
             | .environments[$environment] as $environment_config
             | if $environment_config == null then
-                error("No project-b configuration exists for environment \($environment)")
+                error("No project-c configuration exists for environment \($environment)")
               else
                 {
                   pep_defaults: {
@@ -105,7 +104,7 @@ jobs:
                   resource_group_settings: ($environment_config.resource_group_settings // {})
                 }
               end
-          ' "$GITHUB_WORKSPACE/apps/project-b/project-b.json" \
+          ' "$GITHUB_WORKSPACE/apps/project-c/project-c.json" \
             > terraform.tfvars.json
 
       - name: Verify default resource group is configured for creation
@@ -190,8 +189,8 @@ jobs:
         with:
           name: tfplan-${{ inputs.environment }}-${{ steps.run_details.outputs.run_id }}
           path: |
-            apps/project-b/infrastructure/tf/tfplan
-            apps/project-b/infrastructure/tf/plan-metadata.json
+            apps/project-c/infrastructure/tf/tfplan
+            apps/project-c/infrastructure/tf/plan-metadata.json
           retention-days: 7
 
       - name: Validate Plan Run ID
@@ -207,7 +206,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan-${{ inputs.environment }}-${{ inputs.plan_run_id }}
-          path: apps/project-b/infrastructure/tf
+          path: apps/project-c/infrastructure/tf
           run-id: ${{ inputs.plan_run_id }}
           github-token: ${{ github.token }}
 
