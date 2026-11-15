@@ -27,3 +27,23 @@ variable "resource_group_settings" {
   }))
   default = {}
 }
+
+variable "subnet_settings" {
+  description = "Optional subnet to create in the selected environment's default resource group."
+  type = object({
+    name                 = string
+    virtual_network_name = string
+    address_prefixes     = list(string)
+  })
+  default = null
+
+  validation {
+    condition = var.subnet_settings == null ? true : (
+      length(trimspace(var.subnet_settings.name)) > 0 &&
+      length(trimspace(var.subnet_settings.virtual_network_name)) > 0 &&
+      length(var.subnet_settings.address_prefixes) > 0 &&
+      alltrue([for prefix in var.subnet_settings.address_prefixes : length(trimspace(prefix)) > 0])
+    )
+    error_message = "A subnet requires a name, an existing virtual network name, and at least one address prefix."
+  }
+}

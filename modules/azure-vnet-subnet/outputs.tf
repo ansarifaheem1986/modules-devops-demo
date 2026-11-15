@@ -8,6 +8,11 @@ output "name" {
   value       = var.creation == null ? data.azurerm_subnet.existing[0].name : azurerm_subnet.managed[0].name
 }
 
+output "resource_group_name" {
+  description = "Resource group containing the resolved subnet."
+  value       = var.creation == null ? data.azurerm_subnet.existing[0].resource_group_name : azurerm_subnet.managed[0].resource_group_name
+}
+
 output "address_prefixes" {
   description = "Address prefixes assigned to the resolved subnet."
   value       = var.creation == null ? data.azurerm_subnet.existing[0].address_prefixes : azurerm_subnet.managed[0].address_prefixes
