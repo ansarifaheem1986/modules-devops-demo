@@ -16,7 +16,9 @@ in the configuration.
 
 Creation requires one or more non-empty address prefixes. The parent resource
 group and virtual network must already exist; this module does not create or
-modify either parent resource.
+modify either parent resource. The module looks up the virtual network by name
+and resource group during planning, so a missing or mislocated VNet is reported
+before Terraform attempts to create the subnet.
 
 ## Outputs
 
