@@ -57,9 +57,16 @@ jobs:
       - name: Check Terraform formatting
         run: |
           terraform fmt -check modules/azure-resource-group
+          terraform fmt -check -recursive modules/azure-vnet-subnet
           terraform fmt -check -recursive apps/devops-demo/infrastructure/tf
           terraform fmt -check -recursive apps/project-b/infrastructure/tf
           terraform fmt -check -recursive apps/project-c/infrastructure/tf
+
+      - name: Test VNet subnet module
+        working-directory: modules/azure-vnet-subnet
+        run: |
+          terraform init -backend=false -input=false
+          terraform test -no-color
 
       - name: Test resource group module
         working-directory: modules/azure-resource-group

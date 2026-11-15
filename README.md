@@ -51,3 +51,11 @@ validated AKS module integration before configuring AKS deployment inputs.
 For repository-wide design and new module development, see the
 [detailed architecture](../../docs/edapautomation-architecture.md) and
 [step-by-step module authoring guide](../../docs/creating-terraform-modules.md).
+
+## Azure VNet subnet
+
+The [`azure-vnet-subnet` module](./modules/azure-vnet-subnet/README.md) follows
+the same lookup-by-default and explicit-create pattern. It resolves an existing
+subnet unless given `creation.address_prefixes`; created subnets are protected
+with `prevent_destroy`. The resource group and virtual network must already
+exist.
