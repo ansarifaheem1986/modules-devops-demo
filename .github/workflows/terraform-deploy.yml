@@ -46,7 +46,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: apps/devops-demo/infrastructure/tf
+        working-directory: apps/project-b/infrastructure/tf
 
     env:
       DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
@@ -57,7 +57,7 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
-      TF_STATE_KEY: devops-demo-${{ inputs.environment }}.tfstate
+      TF_STATE_KEY: project-b-${{ inputs.environment }}.tfstate
 
     steps:
 
@@ -91,7 +91,7 @@ jobs:
             . as $app
             | .environments[$environment] as $environment_config
             | if $environment_config == null then
-                error("No devops-demo configuration exists for environment \($environment)")
+                error("No project-b configuration exists for environment \($environment)")
               else
                 {
                   pep_defaults: {
@@ -105,13 +105,25 @@ jobs:
                   resource_group_settings: ($environment_config.resource_group_settings // {})
                 }
               end
-          ' "$GITHUB_WORKSPACE/apps/devops-demo/devops-demo.json" \
+          ' "$GITHUB_WORKSPACE/apps/project-b/project-b.json" \
             > terraform.tfvars.json
+
+      - name: Verify default resource group is configured for creation
+        run: |
+          set -euo pipefail
+          jq -e '
+            .pep_defaults.resource_groups.default as $name
+            | .resource_group_settings[$name].create == true
+          ' terraform.tfvars.json >/dev/null || {
+            echo "The selected environment's default resource group is not configured for creation." >&2
+            exit 1
+          }
 
       - name: Show Environment Configuration
         run: |
           echo "Environment: $DEPLOY_ENVIRONMENT"
           echo "State Key: $TF_STATE_KEY"
+          echo "Resource Group: $(jq -r '.pep_defaults.resource_groups.default' terraform.tfvars.json)"
           cat terraform.tfvars.json
 
       - name: Setup Terraform
@@ -178,8 +190,8 @@ jobs:
         with:
           name: tfplan-${{ inputs.environment }}-${{ steps.run_details.outputs.run_id }}
           path: |
-            apps/devops-demo/infrastructure/tf/tfplan
-            apps/devops-demo/infrastructure/tf/plan-metadata.json
+            apps/project-b/infrastructure/tf/tfplan
+            apps/project-b/infrastructure/tf/plan-metadata.json
           retention-days: 7
 
       - name: Validate Plan Run ID
@@ -195,7 +207,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan-${{ inputs.environment }}-${{ inputs.plan_run_id }}
-          path: apps/devops-demo/infrastructure/tf
+          path: apps/project-b/infrastructure/tf
           run-id: ${{ inputs.plan_run_id }}
           github-token: ${{ github.token }}
 

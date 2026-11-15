@@ -1,0 +1,62 @@
+{
+  "app_prefix": "project-b",
+  "service_name": "project-b",
+  "project_code": "PROJECT-B",
+  "tags": {
+    "application": "project-b"
+  },
+  "environments": {
+    "dev": {
+      "subscription_id": "ca96aa9c-57ea-4595-972b-15cf344b72e3",
+      "resource_groups": {
+        "default": "IACC-ProjectB-dev-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectB-dev-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      }
+    },
+    "qa": {
+      "subscription_id": "ca96aa9c-57ea-4595-972b-15cf344b72e3",
+      "resource_groups": {
+        "default": "IACC-ProjectB-qa-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectB-qa-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      }
+    },
+    "stage": {
+      "subscription_id": "ca96aa9c-57ea-4595-972b-15cf344b72e3",
+      "resource_groups": {
+        "default": "IACC-ProjectB-stage-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectB-stage-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      }
+    },
+    "prod": {
+      "subscription_id": "ca96aa9c-57ea-4595-972b-15cf344b72e3",
+      "resource_groups": {
+        "default": "IACC-ProjectB-prod-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectB-prod-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      }
+    }
+  }
+}
