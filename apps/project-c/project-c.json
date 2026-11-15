@@ -17,6 +17,13 @@
           "location": "eastus",
           "tags": {}
         }
+      },
+      "subnet": {
+        "name": "projectc-subnet-01",
+        "virtual_network_name": "projectc-vent-01",
+        "address_prefixes": [
+          "10.0.0.0/16"
+        ]
       }
     },
     "stage": {

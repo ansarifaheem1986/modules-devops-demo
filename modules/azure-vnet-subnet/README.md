@@ -24,6 +24,7 @@ modify either parent resource.
 |---|---|
 | `id` | Resolved subnet resource ID. |
 | `name` | Resolved subnet name; use it in dependent resources to preserve Terraform ordering. |
+| `resource_group_name` | Resource group containing the subnet. |
 | `address_prefixes` | Prefixes assigned to the subnet. |
 
 ## Example: create a subnet

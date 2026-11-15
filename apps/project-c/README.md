@@ -1,8 +1,9 @@
 # Project C Terraform app
 
 Project C manages one Azure resource group per environment by reusing the shared
-`modules/azure-resource-group` module. Deployable environments are **dev**,
-**stage**, and **prod**. QA is intentionally not configured.
+`modules/azure-resource-group` module. The dev environment also creates a subnet
+in its existing VNet using `modules/azure-vnet-subnet`. Deployable environments
+are **dev**, **stage**, and **prod**. QA is intentionally not configured.
 
 ## Files and responsibilities
 
@@ -10,12 +11,11 @@ Project C manages one Azure resource group per environment by reusing the shared
 |---|---|
 | `project-c.json` | Per-environment subscription, resource-group, location, and tag settings used by the deploy workflow. |
 | `project-c.example.json` | Starter configuration with a placeholder subscription ID. |
-| `infrastructure/tf/main.tf` | Calls the shared resource-group module for each distinct configured group name. |
-| `infrastructure/tf/variables.tf` | Restricts environments to dev/stage/prod and validates Project C resource-group naming. |
+| `infrastructure/tf/main.tf` | Calls the shared resource-group module for each configured group and the subnet module when subnet settings are supplied. |
+| `infrastructure/tf/variables.tf` | Restricts environments to dev/stage/prod and validates Project C group and optional subnet inputs. |
 | `infrastructure/tf/versions.tf` | Pins Terraform/AzureRM and configures the Azure Storage backend. |
-| `infrastructure/tf/.terraform.lock.hcl` | Locks the selected AzureRM provider version and checksums. |
-| `infrastructure/tf/outputs.tf` | Exposes the default resource-group name, ID, and location. |
-| `infrastructure/tf/tests/resource-groups.tftest.hcl` | Tests the Project C resource-group integration with a mocked provider. |
+| `infrastructure/tf/outputs.tf` | Exposes the default resource-group details and optional subnet details, including its resource group. |
+| `infrastructure/tf/tests/resource-groups.tftest.hcl` | Tests that the dev subnet and resource group use the configured values, with a mocked provider. |
 | `.github/workflows/terraform-deploy.yml` | Plans, uploads/downloads a saved plan, applies it, or destroys Project C's selected environment. |
 | `.github/workflows/terraform-ci.yml` | Formats, initializes, tests, and validates Project C. |
 
@@ -30,6 +30,13 @@ deploy workflow fails early if that mapping is missing.
 | dev | `IACC-ProjectC-dev-rg-01` | `project-c-dev.tfstate` |
 | stage | `IACC-ProjectC-stage-rg-01` | `project-c-stage.tfstate` |
 | prod | `IACC-ProjectC-prod-rg-01` | `project-c-prod.tfstate` |
+
+The dev subnet is `projectc-subnet-01` in the existing VNet `projectc-vent-01`,
+and is associated with the dev resource group `IACC-ProjectC-dev-rg-01`. Its
+address prefix is `10.0.0.0/16`. The subnet module does not create its parent
+VNet; verify that this VNet exists in the dev resource group and that its
+address space contains this subnet prefix. Stage and prod currently create only
+their resource groups.
 
 The configuration carries forward the subscription ID and `eastus` region from
 the Project B template. Confirm these are correct for Project C before running
@@ -53,7 +60,7 @@ JSON files.
    Project C's Terraform root, uses `project-c-<environment>.tfstate`, and
    stores/downloads plan artifacts from Project C's directory.
 7. **Added CI coverage:** formatting, initialization, a mocked Terraform test,
-   and the app-validation matrix include Project C.
+   and the app-validation matrix include Project C and its dev subnet integration.
 8. **Validated locally:** formatting, JSON checks, backend-free initialization,
    Terraform validation, and the mocked test are run as described below. A real
    cloud plan was not run as part of this implementation.

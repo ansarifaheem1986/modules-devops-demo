@@ -101,7 +101,8 @@ jobs:
                     resource_groups: $environment_config.resource_groups,
                     tags: ($app.tags // {})
                   },
-                  resource_group_settings: ($environment_config.resource_group_settings // {})
+                  resource_group_settings: ($environment_config.resource_group_settings // {}),
+                  subnet_settings: ($environment_config.subnet // null)
                 }
               end
           ' "$GITHUB_WORKSPACE/apps/project-c/project-c.json" \
