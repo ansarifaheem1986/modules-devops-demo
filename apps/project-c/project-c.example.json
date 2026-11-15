@@ -20,7 +20,56 @@
       },
       "subnet": {
         "name": "projectc-subnet-01",
-        "virtual_network_name": "projectc-vent-01",
+        "virtual_network_name": "projectc-vnet-01",
+        "virtual_network_address_space": [
+          "10.0.0.0/8"
+        ],
+        "address_prefixes": [
+          "10.0.0.0/16"
+        ]
+      }
+    },
+    "stage": {
+      "subscription_id": "REPLACE_WITH_SUBSCRIPTION_UUID",
+      "resource_groups": {
+        "default": "IACC-ProjectC-stage-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectC-stage-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      },
+      "subnet": {
+        "name": "projectc-subnet-stage-01",
+        "virtual_network_name": "projectc-vnet-stage-01",
+        "virtual_network_address_space": [
+          "10.0.0.0/8"
+        ],
+        "address_prefixes": [
+          "10.0.0.0/16"
+        ]
+      }
+    },
+    "prod": {
+      "subscription_id": "REPLACE_WITH_SUBSCRIPTION_UUID",
+      "resource_groups": {
+        "default": "IACC-ProjectC-prod-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectC-prod-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      },
+      "subnet": {
+        "name": "projectc-subnet-prod-01",
+        "virtual_network_name": "projectc-vnet-prod-01",
+        "virtual_network_address_space": [
+          "10.0.0.0/8"
+        ],
         "address_prefixes": [
           "10.0.0.0/16"
         ]

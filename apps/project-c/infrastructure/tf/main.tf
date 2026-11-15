@@ -24,6 +24,11 @@ module "subnet" {
   name                 = var.subnet_settings.name
   resource_group_name  = module.resource_groups[var.pep_defaults.resource_groups.default].name
   virtual_network_name = var.subnet_settings.virtual_network_name
+  virtual_network_creation = {
+    location      = module.resource_groups[var.pep_defaults.resource_groups.default].location
+    address_space = var.subnet_settings.virtual_network_address_space
+    tags          = var.pep_defaults.tags
+  }
   creation = {
     address_prefixes = var.subnet_settings.address_prefixes
   }

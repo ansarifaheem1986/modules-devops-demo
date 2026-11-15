@@ -32,3 +32,18 @@ output "subnet_address_prefixes" {
   description = "Created subnet address prefixes, or null when no subnet is configured."
   value       = try(module.subnet[0].address_prefixes, null)
 }
+
+output "virtual_network_id" {
+  description = "Created virtual network ID, or null when no subnet is configured."
+  value       = try(module.subnet[0].virtual_network_id, null)
+}
+
+output "virtual_network_name" {
+  description = "Created virtual network name, or null when no subnet is configured."
+  value       = try(module.subnet[0].virtual_network_name, null)
+}
+
+output "virtual_network_address_space" {
+  description = "Created virtual network address space, or null when no subnet is configured."
+  value       = try(module.subnet[0].virtual_network_address_space, null)
+}

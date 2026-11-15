@@ -19,12 +19,31 @@ variable "resource_group_name" {
 }
 
 variable "virtual_network_name" {
-  description = "Name of the virtual network that contains the subnet."
+  description = "Name of the existing or explicitly managed virtual network that contains the subnet."
   type        = string
 
   validation {
     condition     = length(trimspace(var.virtual_network_name)) > 0
     error_message = "A virtual network name is required."
+  }
+}
+
+variable "virtual_network_creation" {
+  description = "Null looks up an existing virtual network. Set this object to create and manage the virtual network."
+  type = object({
+    location      = string
+    address_space = list(string)
+    tags          = map(string)
+  })
+  default = null
+
+  validation {
+    condition = var.virtual_network_creation == null ? true : (
+      length(trimspace(var.virtual_network_creation.location)) > 0 &&
+      length(var.virtual_network_creation.address_space) > 0 &&
+      alltrue([for prefix in var.virtual_network_creation.address_space : length(trimspace(prefix)) > 0])
+    )
+    error_message = "Creating a virtual network requires a location and at least one non-empty address space prefix."
   }
 }
 

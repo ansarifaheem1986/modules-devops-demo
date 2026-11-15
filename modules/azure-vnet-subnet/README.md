@@ -1,9 +1,10 @@
 # Azure VNet subnet
 
-Resolves an existing subnet by default. Set `creation` to explicitly create a
-subnet owned by one Terraform state. Managed subnets have `prevent_destroy`
-enabled so Terraform refuses to destroy them while this lifecycle guard remains
-in the configuration.
+Resolves an existing VNet and subnet by default. Set
+`virtual_network_creation` to create the parent VNet and `creation` to create a
+subnet in it. The subnet depends on the managed VNet, so Terraform creates the
+VNet first. Managed subnets have `prevent_destroy` enabled so Terraform refuses
+to destroy them while this lifecycle guard remains in the configuration.
 
 ## Inputs
 
@@ -12,14 +13,13 @@ in the configuration.
 | `name` | string | required |
 | `resource_group_name` | string | required |
 | `virtual_network_name` | string | required |
+| `virtual_network_creation` | object with `location`, `address_space` list(string), and `tags` map(string), or null | null (lookup only) |
 | `creation` | object with `address_prefixes` list(string), or null | null (lookup only) |
 
-Creation requires one or more non-empty address prefixes. The parent resource
-group and virtual network must already exist; this module does not create or
-modify either parent resource. The module resolves the virtual network by name
-and resource group during planning before it reads or creates a subnet. A
-missing VNet therefore fails during planning; create or correct the VNet in the
-same resource group before applying.
+Creating a VNet requires a location and one or more non-empty address spaces.
+Creating a subnet requires one or more non-empty address prefixes. The resource
+group must already exist. When `virtual_network_creation` is omitted, the
+module looks up the existing VNet by name and resource group during planning.
 
 ## Outputs
 
@@ -29,8 +29,11 @@ same resource group before applying.
 | `name` | Resolved subnet name; use it in dependent resources to preserve Terraform ordering. |
 | `resource_group_name` | Resource group containing the subnet. |
 | `address_prefixes` | Prefixes assigned to the subnet. |
+| `virtual_network_id` | ID of the existing or managed parent VNet. |
+| `virtual_network_name` | Name of the existing or managed parent VNet. |
+| `virtual_network_address_space` | Address spaces configured on the parent VNet. |
 
-## Example: create a subnet
+## Example: create a VNet and subnet
 
 ```hcl
 module "app_subnet" {
@@ -38,16 +41,22 @@ module "app_subnet" {
 
   name                 = "project-c-dev-subnet-01"
   resource_group_name  = module.resource_group.name
-  virtual_network_name = module.virtual_network.name
+  virtual_network_name = "project-c-dev-vnet-01"
+  virtual_network_creation = {
+    location      = module.resource_group.location
+    address_space = ["10.0.0.0/8"]
+    tags          = {}
+  }
   creation = {
-    address_prefixes = ["10.20.1.0/24"]
+    address_prefixes = ["10.0.0.0/16"]
   }
 }
 ```
 
-For lookup-only mode, use the same subnet, resource-group, and virtual-network
-names but omit `creation` or set it to `null`. Lookup mode never adopts or
-changes the subnet.
+For lookup-only mode, omit `virtual_network_creation` and `creation`, or set
+them to `null`. Existing resources are looked up and never adopted or changed.
+If identical address spaces are used in separate VNets, keep those VNets
+isolated; overlapping ranges prevent normal peering and routing between them.
 
 ## Validation
 
