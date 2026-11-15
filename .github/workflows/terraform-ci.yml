@@ -80,6 +80,7 @@ jobs:
       matrix:
         app:
           - devops-demo
+          - project-new
     steps:
       - uses: actions/checkout@v4
         with:
