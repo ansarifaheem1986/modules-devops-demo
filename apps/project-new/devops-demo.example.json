@@ -9,10 +9,10 @@
     "dev": {
       "subscription_id": "REPLACE_WITH_SUBSCRIPTION_UUID",
       "resource_groups": {
-        "default": "IACC-Devops-dev-rg-01"
+        "default": "IACC-Devops-dev-new-rg-01"
       },
       "resource_group_settings": {
-        "IACC-Devops-dev-rg-01": {
+        "IACC-Devops-dev-new-rg-01": {
           "create": true,
           "location": "eastus",
           "tags": {}

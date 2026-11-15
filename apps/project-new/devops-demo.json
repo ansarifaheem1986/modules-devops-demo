@@ -12,7 +12,7 @@
         "default": "IACC-Devops-dev-new-rg-01"
       },
       "resource_group_settings": {
-        "IACC-Devops-dev-rg-01": {
+        "IACC-Devops-dev-new-rg-01": {
           "create": true,
           "location": "eastus",
           "tags": {}
@@ -38,7 +38,7 @@
         "default": "IACC-Devops-stage-new-rg-01"
       },
       "resource_group_settings": {
-        "IACC-Devops-stage-rg-01": {
+        "IACC-Devops-stage-new-rg-01": {
           "create": true,
           "location": "eastus",
           "tags": {}
@@ -51,7 +51,7 @@
         "default": "IACC-Devops-prod-new-rg-01"
       },
       "resource_group_settings": {
-        "IACC-Devops-prod-rg-01": {
+        "IACC-Devops-prod-new-rg-01": {
           "create": true,
           "location": "eastus",
           "tags": {}

@@ -10,11 +10,11 @@ variable "pep_defaults" {
   })
   validation {
     condition     = contains(["dev", "qa", "stage", "prod"], var.pep_defaults.environment)
-    error_message = "devops-demo supports only dev, qa, stage and prod."
+    error_message = "project-new supports only dev, qa, stage and prod."
   }
   validation {
-    condition     = can(regex("^IACC-Devops-${var.pep_defaults.environment}-rg-[0-9]{2}$", var.pep_defaults.resource_groups.default))
-    error_message = "The default resource group must follow IACC-Devops-<env>-rg-NN."
+    condition     = can(regex("^IACC-Devops-${var.pep_defaults.environment}(-new)?-rg-[0-9]{2}$", var.pep_defaults.resource_groups.default))
+    error_message = "The default resource group must follow IACC-Devops-<env>(-new)-rg-NN."
   }
 }
 
