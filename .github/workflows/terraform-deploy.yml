@@ -51,10 +51,13 @@ jobs:
     env:
       DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
       PLAN_RUN_ID: ${{ inputs.plan_run_id }}
+
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+      TF_STATE_KEY: devops-demo-${{ inputs.environment }}.tfstate
 
     steps:
 
@@ -69,18 +72,21 @@ jobs:
           ACTIONS_RUNNER_ARCH: ${{ runner.arch }}
         run: |
           set -euo pipefail
+
           echo "run_id=$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+
           {
             echo "### GitHub Actions runner"
-            echo "- Runner: \`$ACTIONS_RUNNER_NAME\`"
-            echo "- OS / architecture: \`$ACTIONS_RUNNER_OS / $ACTIONS_RUNNER_ARCH\`"
-            echo "- Workflow run ID: \`$GITHUB_RUN_ID\`"
-            echo "- Run attempt: \`$GITHUB_RUN_ATTEMPT\`"
+            echo "- Runner: $ACTIONS_RUNNER_NAME"
+            echo "- OS / architecture: $ACTIONS_RUNNER_OS / $ACTIONS_RUNNER_ARCH"
+            echo "- Workflow run ID: $GITHUB_RUN_ID"
+            echo "- Run attempt: $GITHUB_RUN_ATTEMPT"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Generate Terraform variables for selected environment
         run: |
           set -euo pipefail
+
           jq -e --arg environment "$DEPLOY_ENVIRONMENT" '
             . as $app
             | .environments[$environment] as $environment_config
@@ -102,6 +108,12 @@ jobs:
           ' "$GITHUB_WORKSPACE/apps/devops-demo/devops-demo.json" \
             > terraform.tfvars.json
 
+      - name: Show Environment Configuration
+        run: |
+          echo "Environment: $DEPLOY_ENVIRONMENT"
+          echo "State Key: $TF_STATE_KEY"
+          cat terraform.tfvars.json
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -113,7 +125,15 @@ jobs:
 
       - name: Terraform Init
         run: |
-          terraform init -input=false
+          terraform init \
+            -reconfigure \
+            -input=false \
+            -backend-config="key=${TF_STATE_KEY}"
+
+      - name: Verify State Backend
+        run: |
+          echo "Environment : ${DEPLOY_ENVIRONMENT}"
+          echo "State File  : ${TF_STATE_KEY}"
 
       - name: Terraform Format Check
         run: terraform fmt -check
@@ -136,10 +156,10 @@ jobs:
         run: |
           {
             echo "### Saved Terraform plan"
-            echo "- Environment: \`$DEPLOY_ENVIRONMENT\`"
-            echo "- Plan Run ID: \`$PLAN_RUN_ID\`"
-            echo "- Artifact: \`$PLAN_ARTIFACT_NAME\`"
-            echo "- To apply this exact plan, rerun this workflow with action \`apply\`, the same environment and commit, and enter this Plan Run ID."
+            echo "- Environment: ${DEPLOY_ENVIRONMENT}"
+            echo "- Plan Run ID: ${PLAN_RUN_ID}"
+            echo "- State File: ${TF_STATE_KEY}"
+            echo "- Artifact: ${PLAN_ARTIFACT_NAME}"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Record plan metadata
@@ -166,7 +186,7 @@ jobs:
         if: inputs.action == 'apply'
         run: |
           if [[ ! "$PLAN_RUN_ID" =~ ^[0-9]+$ ]]; then
-            echo "For apply, provide the run ID from the successful plan run." >&2
+            echo "For apply, provide the run ID from the successful plan run."
             exit 1
           fi
 
@@ -179,23 +199,19 @@ jobs:
           run-id: ${{ inputs.plan_run_id }}
           github-token: ${{ github.token }}
 
-      - name: Verify downloaded plan
+      - name: Verify Downloaded Plan
         if: inputs.action == 'apply'
         run: |
           set -euo pipefail
+
           jq -e \
             --arg environment "$DEPLOY_ENVIRONMENT" \
             --arg source_sha "$GITHUB_SHA" \
             --arg run_id "$PLAN_RUN_ID" \
             '.environment == $environment and .source_sha == $source_sha and .run_id == $run_id' \
-            plan-metadata.json >/dev/null || {
-              echo "The downloaded plan must match this environment, commit, and plan run ID." >&2
-              exit 1
-            }
-          test -f tfplan || {
-            echo "The downloaded artifact does not contain tfplan." >&2
-            exit 1
-          }
+            plan-metadata.json >/dev/null
+
+          test -f tfplan
 
       - name: Terraform Apply
         if: inputs.action == 'apply'
