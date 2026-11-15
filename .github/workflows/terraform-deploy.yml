@@ -60,7 +60,7 @@ jobs:
       TF_STATE_RESOURCE_GROUP: devops-iacc-dev-rg-01
       TF_STATE_STORAGE_ACCOUNT: ${{ secrets.TF_STATE_STORAGE_ACCOUNT }}
       TF_STATE_CONTAINER: module-stage-apps
-      TF_STATE_KEY: devops-demo/${{ inputs.environment }}.tfstate
+      TF_STATE_KEY: devops-demo-${{ inputs.environment }}.tfstate
 
     steps:
       - name: Checkout Repository
@@ -79,10 +79,10 @@ jobs:
 
           {
             echo "### GitHub Actions runner"
-            echo "- Runner: \`$ACTIONS_RUNNER_NAME\`"
-            echo "- OS / architecture: \`$ACTIONS_RUNNER_OS / $ACTIONS_RUNNER_ARCH\`"
-            echo "- Workflow run ID: \`$GITHUB_RUN_ID\`"
-            echo "- Run attempt: \`$GITHUB_RUN_ATTEMPT\`"
+            echo "- Runner: $ACTIONS_RUNNER_NAME"
+            echo "- OS / architecture: $ACTIONS_RUNNER_OS / $ACTIONS_RUNNER_ARCH"
+            echo "- Workflow run ID: $GITHUB_RUN_ID"
+            echo "- Run attempt: $GITHUB_RUN_ATTEMPT"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Generate Terraform variables for selected environment
@@ -107,14 +107,32 @@ jobs:
                   resource_group_settings: ($environment_config.resource_group_settings // {})
                 }
               end
-          ' "$GITHUB_WORKSPACE/apps/devops-demo/devops-demo.json" \
-            > terraform.tfvars.json
+          ' "$GITHUB_WORKSPACE/apps/devops-demo/devops-demo.json" > terraform.tfvars.json
 
       - name: Show Environment Configuration
         run: |
           echo "Environment: $DEPLOY_ENVIRONMENT"
           echo "Backend Key: $TF_STATE_KEY"
           cat terraform.tfvars.json
+
+      - name: Validate Backend Configuration
+        run: |
+          set -euo pipefail
+
+          echo "Environment: ${DEPLOY_ENVIRONMENT}"
+          echo "Resource Group: ${TF_STATE_RESOURCE_GROUP}"
+          echo "Container: ${TF_STATE_CONTAINER}"
+          echo "State Key: ${TF_STATE_KEY}"
+
+          [[ -n "${TF_STATE_RESOURCE_GROUP}" ]] || { echo "Missing TF_STATE_RESOURCE_GROUP"; exit 1; }
+          [[ -n "${TF_STATE_CONTAINER}" ]] || { echo "Missing TF_STATE_CONTAINER"; exit 1; }
+          [[ -n "${TF_STATE_KEY}" ]] || { echo "Missing TF_STATE_KEY"; exit 1; }
+
+          if [ -z "${TF_STATE_STORAGE_ACCOUNT}" ]; then
+            echo "ERROR: TF_STATE_STORAGE_ACCOUNT is empty."
+            echo "Configure TF_STATE_STORAGE_ACCOUNT in GitHub Secrets."
+            exit 1
+          fi
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -137,8 +155,10 @@ jobs:
 
       - name: Verify State Backend
         run: |
-          echo "Terraform state file:"
-          echo "${TF_STATE_KEY}"
+          echo "Terraform backend configured:"
+          echo "Storage Account : ${TF_STATE_STORAGE_ACCOUNT}"
+          echo "Container       : ${TF_STATE_CONTAINER}"
+          echo "State File      : ${TF_STATE_KEY}"
 
       - name: Terraform Format Check
         run: terraform fmt -check
