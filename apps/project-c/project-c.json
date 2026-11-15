@@ -1,0 +1,49 @@
+{
+  "app_prefix": "project-c",
+  "service_name": "project-c",
+  "project_code": "PROJECT-C",
+  "tags": {
+    "application": "project-c"
+  },
+  "environments": {
+    "dev": {
+      "subscription_id": "ca96aa9c-57ea-4595-972b-15cf344b72e3",
+      "resource_groups": {
+        "default": "IACC-ProjectC-dev-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectC-dev-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      }
+    },
+    "stage": {
+      "subscription_id": "ca96aa9c-57ea-4595-972b-15cf344b72e3",
+      "resource_groups": {
+        "default": "IACC-ProjectC-stage-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectC-stage-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      }
+    },
+    "prod": {
+      "subscription_id": "ca96aa9c-57ea-4595-972b-15cf344b72e3",
+      "resource_groups": {
+        "default": "IACC-ProjectC-prod-rg-01"
+      },
+      "resource_group_settings": {
+        "IACC-ProjectC-prod-rg-01": {
+          "create": true,
+          "location": "eastus",
+          "tags": {}
+        }
+      }
+    }
+  }
+}
